@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Impact Explorer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #f0f9ff;
+            padding: 20px;
+        }
+
+        .card {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-content {
+            padding: 20px;
+        }
+
+        .input-group {
+            background: linear-gradient(to right, #dbeafe, #dcfce7);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .city-select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 1rem;
+        }
+
+        .slider-container {
+            margin-top: 8px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin: 8px 0;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: #4b5563;
+        }
+
+        .calculate-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(to right, #3b82f6, #22c55e);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .calculate-btn:hover {
+            background: linear-gradient(to right, #2563eb, #16a34a);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .result-card {
+            padding: 16px;
+            border-radius: 8px;
+            transition: transform 0.2s;
+        }
+
+        .result-card.energy {
+            background: linear-gradient(to bottom right, #dbeafe, #bfdbfe);
+        }
+
+        .result-card.trees {
+            background: linear-gradient(to bottom right, #dcfce7, #bbf7d0);
+        }
+
+        .result-card.savings {
+            background: linear-gradient(to bottom right, #f3e8ff, #e9d5ff);
+        }
+
+        .result-card.carbon {
+            background: linear-gradient(to bottom right, #fff7ed, #fed7aa);
+        }
+
+        .result-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .result-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        #chart {
+            width: 100%;
+            height: 300px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">
+                ☀️ Solar Impact Explorer 🌍
+            </h1>
+        </div>
+        <div class="card-content">
+            <div class="input-group">
+                <label class="text-sm font-medium">Location</label>
+                <select id="citySelect" class="city-select">
+                    <option value="5.65">New Delhi (5.65 kWh/m²)</option>
+                    <option value="5.22">Mumbai (5.22 kWh/m²)</option>
+                    <option value="5.96">Bangalore (5.96 kWh/m²)</option>
+                    <option value="5.48">Chennai (5.48 kWh/m²)</option>
+                    <option value="5.80">Hyderabad (5.80 kWh/m²)</option>
+                    <option value="5.90">Ahmedabad (5.90 kWh/m²)</option>
+                    <option value="5.50">Kolkata (5.50 kWh/m²)</option>
+                    <option value="5.75">Pune (5.75 kWh/m²)</option>
+                    <option value="5.85">Jaipur (5.85 kWh/m²)</option>
+                    <option value="5.70">Lucknow (5.70 kWh/m²)</option>
+                    <option value="5.45">LPU Jalandhar (5.45 kWh/m²)</option>
+                </select>
+
+                <label class="text-sm font-medium">Solar System Size (kW)</label>
+                <div class="slider-container">
+                    <input type="range" id="systemSize" min="0" max="10000" value="5000">
+                    <div class="slider-labels">
+                        <span>0 kW</span>
+                        <span id="currentSize">5000 kW</span>
+                        <span>10,000 kW</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="calculate-btn" onclick="calculateSavings()">
+                Calculate Impact
+            </button>
+
+            <div id="results" style="display: none;">
+                <div class="results-grid">
+                    <div class="result-card energy">
+                        <div class="result-label">☀️ Daily Energy</div>
+                        <div class="result-value" id="dailyEnergy">0 kWh</div>
+                    </div>
+                    
+                    <div class="result-card trees">
+                        <div class="result-label">🌲 Trees Equivalent</div>
+                        <div class="result-value" id="trees">0</div>
+                    </div>
+                    
+                    <div class="result-card savings">
+                        <div class="result-label">⚡ Annual Savings</div>
+                        <div class="result-value" id="savings">₹0</div>
+                    </div>
+                    
+                    <div class="result-card carbon">
+                        <div class="result-label">☁️ CO₂ Reduced</div>
+                        <div class="result-value" id="carbon">0 kg</div>
+                    </div>
+                </div>
+
+                <canvas id="chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const cityData = {
+            "5.65": { energy: 5.65, cost: 7, carbon: 0.85 },
+            "5.22": { energy: 5.22, cost: 7.5, carbon: 0.87 },
+            "5.96": { energy: 5.96, cost: 7.8, carbon: 0.80 },
+            "5.48": { energy: 5.48, cost: 8, carbon: 0.82 },
+            "5.80": { energy: 5.80, cost: 7.3, carbon: 0.79 },
+            "5.90": { energy: 5.90, cost: 7.1, carbon: 0.75 },
+            "5.50": { energy: 5.50, cost: 7.6, carbon: 0.83 },
+            "5.75": { energy: 5.75, cost: 7.4, carbon: 0.78 },
+            "5.85": { energy: 5.85, cost: 7.2, carbon: 0.77 },
+            "5.70": { energy: 5.70, cost: 7.2, carbon: 0.81 },
+            "5.45": { energy: 5.45, cost: 7.3, carbon: 0.82 }
+        };
+
+        const systemSizeSlider = document.getElementById("systemSize");
+        const citySelect = document.getElementById("citySelect");
+        const currentSize = document.getElementById("currentSize");
+        const dailyEnergyElem = document.getElementById("dailyEnergy");
+        const treesElem = document.getElementById("trees");
+        const savingsElem = document.getElementById("savings");
+        const carbonElem = document.getElementById("carbon");
+        const resultsDiv = document.getElementById("results");
+        const chartCanvas = document.getElementById("chart");
+
+        systemSizeSlider.addEventListener("input", (e) => {
+            currentSize.textContent = `${e.target.value} kW`;
+        });
+
+        function calculateSavings() {
+            const cityFactor = cityData[citySelect.value];
+            const systemSize = systemSizeSlider.value;
+
+            const dailyEnergy = (systemSize * cityFactor.energy).toFixed(2);
+            const annualSavings = (systemSize * cityFactor.energy * 365 * cityFactor.cost).toFixed(2);
+            const treesEquivalent = Math.round(dailyEnergy / 0.04);
+            const co2Reduced = Math.round(dailyEnergy * cityFactor.carbon);
+
+            dailyEnergyElem.textContent = `${dailyEnergy} kWh`;
+            treesElem.textContent = `${treesEquivalent}`;
+            savingsElem.textContent = `₹${annualSavings}`;
+            carbonElem.textContent = `${co2Reduced} kg`;
+
+            updateGraph(dailyEnergy, annualSavings, treesEquivalent, co2Reduced);
+            resultsDiv.style.display = "block";
+        }
+
+        function updateGraph(dailyEnergy, annualSavings, trees, co2Reduced) {
+            const ctx = chartCanvas.getContext('2d');
+            const chartData = {
+                labels: ['Energy (kWh)', 'Savings (₹)', 'Trees', 'CO₂ Reduced (kg)'],
+                datasets: [
+                    {
+                        label: 'Solar Impact',
+                        data: [dailyEnergy, annualSavings, trees, co2Reduced],
+                        backgroundColor: ['#3b82f6', '#34d399', '#f59e0b', '#ef4444'],
+                        borderColor: ['#2563eb', '#16a34a', '#d97706', '#dc2626'],
+                        borderWidth: 1
+                    }
+                ]
+            };
+
+            if (window.barChart) {
+                window.barChart.destroy();
+            }
+
+            window.barChart = new Chart(ctx, {
+                type: 'bar',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        },
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
